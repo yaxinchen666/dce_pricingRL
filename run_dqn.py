@@ -17,7 +17,7 @@ GAMMA = 0.99
 LEARNING_RATE = 0.001
 TARGET_UPDATE_FREQ = 1000
 
-EPISODE = 20000
+EPISODE = 10000
 T = 240
 
 DAYS = 30
@@ -53,15 +53,19 @@ if __name__ == "__main__":
         'customers': np.random.poisson(TOTAL_INVENTORY/DAYS/NUM_INTERVAL, DAYS*NUM_INTERVAL),
         'expected_price_mean': EXPECTED_PRICE_MEAN,
         'expected_price_var': EXPECTED_PRICE_VAR,
-        'init_price': 0.5
+        'init_price': INIT_PRICE
     }
     T_Env = Env(Env_params)
     Agent = DQNAgent(env=T_Env, agent_params=DQNAgent_params)
-    # Agent.load_nn_weights("")
+    path = "./nnWeights/nnWeight_0409_3/weight320.h5"  # load model
+    if os.path.exists(path):
+        print("Load weights from ", path)
+        Agent.load_nn_weights(path)
 
     for episode in tqdm.tqdm(range(EPISODE)):
-        if episode % 100 == 0:
-            print("Episode: ", episode)
+        print("Episode: ", episode)
+        # reset the environment
+        if episode % 10 == 0:
             poisson_l = np.random.randint(0.5*TOTAL_INVENTORY/DAYS/NUM_INTERVAL, 1.5*TOTAL_INVENTORY/DAYS/NUM_INTERVAL)
             state = T_Env.reset(is_random=1, set_dis=1, poisson_lam=poisson_l)
         else:
@@ -72,7 +76,7 @@ if __name__ == "__main__":
             state = Agent.step_env(state)
             Agent.train()
 
-        if episode % 2000 == 0:
+        if episode % 100 == 0:
             if not os.path.exists("./nnWeight"):
                 os.makedirs("./nnWeight")
             path = "./nnWeight/weight"+str(int(episode))+".h5"

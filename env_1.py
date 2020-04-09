@@ -7,7 +7,7 @@ class Env(object):
         self.days = env_params['days']
         self.num_interval = env_params['num_interval']  # number of intervals per day
         self.action_size = env_params['action_size']
-        self.action_interval = env_params['action_interval']
+        self.action_interval = env_params['action_interval']  # interval between two neighboring actions (1%)
         self.total_inventory = env_params['total_inventory']
         self.customers = env_params['customers']  # customer model
         self.expected_price_mean = env_params['expected_price_mean']  # model of expected price of customer
@@ -20,6 +20,7 @@ class Env(object):
         self.p = env_params['init_price']  # price initialed according to the price given by LSTM
         # p = (pt-p0)/p0, where p0 is the lowest price(cost), pt is the price we set at time t,
         # p is like the percent of the profit, 0<=p<=1, i.e. p0 <= price <= 2 * p0
+        # TODO: the limit of p should be changed according to real settings, and this could be changed in update_p()
 
     # opening price
     def set_price(self, lstm_p):
@@ -39,6 +40,10 @@ class Env(object):
             self.p = (1 + self.p) * action_percent - 1
 
     # TODO change environment setting
+    # reset Env to the initial state
+    # if is_random=1, randomly set initial current_inventory, current_day and current_interval
+    # if set_dis=1, set the distribution using parameters
+    # otherwise, use default setting
     def reset(self, is_random=0, lstm_p=0.5, set_dis=0, poisson_lam=4, normal_mean=0.5, normal_var=0.1):
         # default: remaining_time=1 [=days], utilization=0%, price=0.5 [=1.5*lowest_price]
         # return [remaining_time, utilization, price]
@@ -64,12 +69,12 @@ class Env(object):
             self.expected_price_var = 0.1
         # the number of customers at current_interval of current_day:
         # self.customers[self.current_day*self.num_interval + self.num_interval - self.current_interval]
-        remaining_time = self.current_day/self.days
+        remaining_time = (self.current_day+1)/self.days
         # remaining_time = self.current_day/self.days*(1+(self.num_interval - self.current_interval)/self.num_interval)
         utilization = 1 - self.current_inventory/self.total_inventory
         return np.array([[remaining_time, utilization, self.p]])
 
-    # Env changes after action
+    # Env (state, reward, done) changes after action
     def step(self, action):
         # when (remaining_time=0 or utilization=100%): done=1
         reward = 0
@@ -90,7 +95,7 @@ class Env(object):
             self.current_day -= 1  # TODO: interact with LSTM to set the opening price
         self.current_interval = (self.current_interval+1) % self.num_interval
 
-        remaining_time = self.current_day/self.days
+        remaining_time = (self.current_day+1)/self.days
         utilization = 1 - self.current_inventory/self.total_inventory
         next_state = np.array([[remaining_time, utilization, self.p]])
 
