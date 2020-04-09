@@ -50,6 +50,6 @@ DQNAgent可以根据 **state** 来判断 **action**。它用隐藏层大小为[1
 
 #### 后续
 
-`pricing.py` : 搬运https://github.com/1156564544/smart-pricing-based-on-reinforcement-learning里的`comparing.py`。用训练出来的DQNAgent进行定价，并和随机/固定定价对比。
+`pricing.py` : 搬运https://github.com/1156564544/smart-pricing-based-on-reinforcement-learning 的`comparing.py`。用训练出来的DQNAgent进行定价，并和随机/固定定价对比。
 
 现训练得的DQNAgent在某些设定中表现不如固定定价（可能训练时间还不够），且它更倾向于降价... 这个可能跟Env设置有关......
